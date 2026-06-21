@@ -26,9 +26,9 @@ export default function Footer() {
             <a href={profile.links.cv} download className="inline-flex items-center gap-2 rounded-xl border border-line px-4 py-2 text-sm text-text transition hover:border-white/25">
               <Download className="h-4 w-4" /> Download CV
             </a>
-            <a href={profile.links.github} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-line px-4 py-2 text-sm text-muted transition hover:text-cyan"><GithubIcon className="h-4 w-4" /></a>
-            <a href={profile.links.linkedin} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-line px-4 py-2 text-sm text-muted transition hover:text-cyan"><LinkedinIcon className="h-4 w-4" /></a>
-            <a href={profile.links.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-line px-4 py-2 text-sm text-muted transition hover:text-cyan"><Globe className="h-4 w-4" /></a>
+            <a href={profile.links.github} target="_blank" rel="noreferrer" aria-label="GitHub profile" title="GitHub" className="inline-flex items-center gap-2 rounded-xl border border-line px-4 py-2 text-sm text-muted transition hover:text-cyan"><GithubIcon className="h-4 w-4" /></a>
+            <a href={profile.links.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn profile" title="LinkedIn" className="inline-flex items-center gap-2 rounded-xl border border-line px-4 py-2 text-sm text-muted transition hover:text-cyan"><LinkedinIcon className="h-4 w-4" /></a>
+            <a href={profile.links.website} target="_blank" rel="noreferrer" aria-label="Personal website" title="Website" className="inline-flex items-center gap-2 rounded-xl border border-line px-4 py-2 text-sm text-muted transition hover:text-cyan"><Globe className="h-4 w-4" /></a>
           </div>
         </div>
 

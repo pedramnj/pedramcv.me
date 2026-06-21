@@ -37,8 +37,15 @@ interface Props {
 /** Thin CodeMirror wrapper used for both the editable challenge and read-only artifacts. */
 export default function CodeEditorImpl({ value, lang, onChange, editable = true, height = "260px" }: Props) {
   const extensions = useMemo(
-    () => [...langExtensions(lang), EditorView.lineWrapping],
-    [lang],
+    () => [
+      ...langExtensions(lang),
+      EditorView.lineWrapping,
+      // Give the contenteditable an accessible name for screen readers / a11y audits.
+      EditorView.contentAttributes.of({
+        "aria-label": editable ? `Code editor (${lang})` : `Code sample (${lang}), read only`,
+      }),
+    ],
+    [lang, editable],
   );
 
   return (
