@@ -17,10 +17,15 @@ const kindClass: Record<LogKind, string> = {
 export default function LogStream() {
   const logs = usePipeline((s) => s.logs);
   const status = usePipeline((s) => s.status);
-  const endRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Pin the newest line into view by nudging ONLY this panel's own scroll
+  // position. (scrollIntoView would also scroll the window — which yanked the
+  // whole page down on load and crept it downward on every streamed log line.)
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    const el = scrollRef.current;
+    if (!el || logs.length === 0) return;
+    el.scrollTop = el.scrollHeight;
   }, [logs.length]);
 
   return (
@@ -33,7 +38,7 @@ export default function LogStream() {
         {status === "running" && <span className="ml-auto h-2 w-2 animate-pulse rounded-full bg-cyan shadow-[0_0_8px_var(--color-cyan)]" />}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4 font-mono text-[12.5px] leading-relaxed">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto p-4 font-mono text-[12.5px] leading-relaxed">
         {logs.length === 0 ? (
           <p className="text-faint">
             <span className="text-emerald">$</span> press <span className="text-cyan">Run pipeline</span> to push your change through CI → Docker → Terraform → Kubernetes → Grafana…
@@ -46,7 +51,6 @@ export default function LogStream() {
             </div>
           ))
         )}
-        <div ref={endRef} />
       </div>
     </div>
   );
