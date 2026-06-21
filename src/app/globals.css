@@ -179,6 +179,21 @@ body {
 .animate-rise { animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .animate-pulse-soft { animation: pulse-soft 2.4s ease-in-out infinite; }
 
+/* Mobile gate: a phone that can't quite contain the pipeline. */
+@keyframes mg-wobble {
+  0%, 100% { transform: rotate(-2.5deg); }
+  50% { transform: rotate(2.5deg); }
+}
+@keyframes mg-drip {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(30px); opacity: 0; }
+}
+.mg-wobble { animation: mg-wobble 3.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 82%; }
+.mg-flow { stroke-dasharray: 13 11; animation: flow-dash 1.5s linear infinite; }
+.mg-drip { animation: mg-drip 2.3s ease-in infinite; }
+
 /* Custom scrollbar — thin, on-brand. */
 *::-webkit-scrollbar { width: 9px; height: 9px; }
 *::-webkit-scrollbar-track { background: transparent; }

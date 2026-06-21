@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import MobileGate from "@/components/shell/MobileGate";
 
 const display = Space_Grotesk({
   variable: "--font-display",
@@ -73,7 +74,10 @@ export default function RootLayout({
       className={`${display.variable} ${sans.variable} ${mono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        {children}
+        <MobileGate />
+      </body>
     </html>
   );
 }
