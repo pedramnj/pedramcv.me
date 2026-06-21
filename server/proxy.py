@@ -37,6 +37,8 @@ CALLBACK_SECRET = os.environ.get("CALLBACK_SECRET", "")
 ALLOW_ORIGIN = os.environ.get("ALLOW_ORIGIN", "https://pedramcv.me")
 LISTEN_HOST = os.environ.get("LISTEN_HOST", "127.0.0.1")
 LISTEN_PORT = int(os.environ.get("LISTEN_PORT", "8787"))
+PROM_URL = os.environ.get("PROM_URL", "http://127.0.0.1:9090")
+GRAFANA_URL = os.environ.get("GRAFANA_URL", "https://pedramcv.me/grafana/d/pedramcv-live")
 
 MAX_CODE_BYTES = int(os.environ.get("MAX_CODE_BYTES", "16384"))
 MAX_OUTPUT_BYTES = int(os.environ.get("MAX_OUTPUT_BYTES", "16384"))
@@ -56,6 +58,11 @@ IP_HITS = {}       # ip -> [timestamps]
 INFLIGHT = 0
 DAY = time.strftime("%Y-%m-%d")
 DAY_COUNT = 0
+
+# Real metrics exported to Prometheus (/metrics) and the Observe panel (/api/observe).
+METRICS = {"runs_total": 0, "runs_success": 0, "runs_failure": 0, "dispatch_ms": 0.0}
+OBSERVE_CACHE = {"t": 0.0, "data": None}  # short TTL so many pollers don't hammer Prometheus
+CPU_BUSY = '100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[1m])) * 100)'
 
 
 def _gc(now):
@@ -153,6 +160,28 @@ def find_run(nonce):
     return None
 
 
+def _prom_get(path):
+    req = urllib.request.Request(f"{PROM_URL}/api/v1/{path}", headers={"User-Agent": "pcv-proxy"})
+    with urllib.request.urlopen(req, timeout=4) as r:
+        return json.loads(r.read())
+
+
+def prom_scalar(q):
+    from urllib.parse import quote
+    d = _prom_get(f"query?query={quote(q)}")
+    res = d.get("data", {}).get("result", [])
+    return round(float(res[0]["value"][1]), 2) if res else None
+
+
+def prom_series(q, minutes=15, step=30):
+    from urllib.parse import quote
+    end = int(time.time())
+    start = end - minutes * 60
+    d = _prom_get(f"query_range?query={quote(q)}&start={start}&end={end}&step={step}")
+    res = d.get("data", {}).get("result", [])
+    return [round(float(v[1]), 2) for v in res[0]["values"]] if res else []
+
+
 class Handler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
     server_version = "pcv-proxy"
@@ -210,6 +239,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"ok": True, "inflight": INFLIGHT, "day": DAY_COUNT})
         if self.path.startswith("/api/status"):
             return self.handle_status()
+        if self.path.startswith("/api/observe"):
+            return self.handle_observe()
+        if self.path.startswith("/metrics"):
+            return self.handle_metrics()
         return self._send(404, {"error": "not found"})
 
     def do_POST(self):
@@ -240,6 +273,7 @@ class Handler(BaseHTTPRequestHandler):
 
         nonce = secrets.token_hex(8)
         code_b64 = base64.b64encode(code.encode()).decode()
+        t0 = time.time()
         try:
             ok = dispatch(lang, code_b64, nonce)
         except urllib.error.HTTPError as e:
@@ -248,6 +282,7 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e:
             ok = False
             detail = str(e)[:300]
+        dispatch_ms = round((time.time() - t0) * 1000, 1)
         if not ok:
             with LOCK:
                 rollback_admit()  # release the slot we reserved
@@ -258,6 +293,8 @@ class Handler(BaseHTTPRequestHandler):
             RUNS[nonce] = {"created": time.time(), "status": "dispatched",
                            "run_id": None, "run_url": None, "result": None,
                            "done": False, "ip": ip}
+            METRICS["runs_total"] += 1
+            METRICS["dispatch_ms"] = dispatch_ms
         return self._send(202, {"nonce": nonce})
 
     def handle_status(self):
@@ -289,6 +326,61 @@ class Handler(BaseHTTPRequestHandler):
                                     "runId": gh.get("id")})
         return self._send(200, {"phase": "dispatched", "runUrl": None})
 
+    def handle_metrics(self):
+        """Prometheus exposition for the playground's own run metrics (scraped on localhost)."""
+        with LOCK:
+            m = dict(METRICS)
+            inflight = INFLIGHT
+        body = (
+            "# TYPE playground_runs_total counter\n"
+            f"playground_runs_total {m['runs_total']}\n"
+            "# TYPE playground_runs_success_total counter\n"
+            f"playground_runs_success_total {m['runs_success']}\n"
+            "# TYPE playground_runs_failure_total counter\n"
+            f"playground_runs_failure_total {m['runs_failure']}\n"
+            "# TYPE playground_inflight gauge\n"
+            f"playground_inflight {inflight}\n"
+            "# TYPE playground_dispatch_latency_ms gauge\n"
+            f"playground_dispatch_latency_ms {m['dispatch_ms']}\n"
+        ).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain; version=0.0.4")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def handle_observe(self):
+        """Real numbers for the Observe panel: host golden signals (Prometheus) + run stats."""
+        now = time.time()
+        with LOCK:
+            cached = OBSERVE_CACHE["data"]
+            fresh = cached is not None and now - OBSERVE_CACHE["t"] < 2.5
+            m = dict(METRICS)
+            inflight = INFLIGHT
+        if fresh:
+            return self._send(200, cached)
+
+        out = {
+            "runs": {"total": m["runs_total"], "success": m["runs_success"],
+                     "failure": m["runs_failure"], "inflight": inflight,
+                     "dispatchMs": m["dispatch_ms"]},
+            "grafanaUrl": GRAFANA_URL,
+        }
+        try:
+            out["cpu"] = prom_scalar(CPU_BUSY)
+            out["mem"] = prom_scalar('100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)')
+            out["load1"] = prom_scalar("node_load1")
+            out["uptimeSec"] = prom_scalar("node_time_seconds - node_boot_time_seconds")
+            out["spark"] = prom_series(CPU_BUSY, minutes=15, step=30)
+            out["ok"] = True
+        except Exception as e:
+            out["ok"] = False
+            out["error"] = str(e)[:120]
+        with LOCK:
+            OBSERVE_CACHE["t"] = now
+            OBSERVE_CACHE["data"] = out
+        return self._send(200, out)
+
     def handle_result(self):
         sig = self.headers.get("X-Callback-Secret", "")
         if not CALLBACK_SECRET or not hmac.compare_digest(sig, CALLBACK_SECRET):
@@ -306,9 +398,14 @@ class Handler(BaseHTTPRequestHandler):
                     .decode("utf-8", "replace")
             except Exception:
                 output = "(unreadable output)"
-            run["result"] = {"exitCode": int(data.get("exitCode", 1)), "output": output}
+            exit_code = int(data.get("exitCode", 1))
+            run["result"] = {"exitCode": exit_code, "output": output}
             run["run_id"] = data.get("runId") or run.get("run_id")
             run["status"] = "done"
+            if exit_code == 0:
+                METRICS["runs_success"] += 1
+            else:
+                METRICS["runs_failure"] += 1
             release(nonce)
         return self._send(200, {"ok": True})
 
