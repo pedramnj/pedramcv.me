@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
   },
-  icons: { icon: "/favicon.ico" },
+  // icons auto-detected from app/icon.svg, app/favicon.ico, app/apple-icon.png
 };
 
 export const viewport: Viewport = {

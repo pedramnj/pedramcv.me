@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Live Pipeline Playground">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c1326"/>
+      <stop offset="1" stop-color="#04060d"/>
+    </linearGradient>
+    <linearGradient id="liquid" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="0.55" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#a855f7"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="44%" r="58%">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.1" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- tile -->
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#bg)" stroke="#1b2542" stroke-width="1.5"/>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#halo)"/>
+
+  <!-- glass tube -->
+  <path d="M15 49 L49 15" fill="none" stroke="#cfe9ff" stroke-opacity="0.14" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- glowing liquid filling the lower ~60% of the pipe -->
+  <path d="M15 49 L37 27" fill="none" stroke="url(#liquid)" stroke-width="9" stroke-linecap="round" filter="url(#glow)"/>
+
+  <!-- bright meniscus / advancing front -->
+  <circle cx="37" cy="27" r="4.6" fill="#eafdff" filter="url(#glow)"/>
+</svg>
