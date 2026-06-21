@@ -1,0 +1,36 @@
+[Unit]
+Description=pedramcv.me GitHub Actions playground proxy
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pcvproxy
+Group=pcvproxy
+EnvironmentFile=/etc/pedramcv/proxy.env
+ExecStart=/usr/bin/python3 /opt/pedramcv/proxy.py
+Restart=on-failure
+RestartSec=2
+
+# --- hardening: this faces the public internet, so lock it down ---
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+CapabilityBoundingSet=
+AmbientCapabilities=
+ReadOnlyPaths=/opt/pedramcv
+
+[Install]
+WantedBy=multi-user.target

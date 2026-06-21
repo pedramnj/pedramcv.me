@@ -28,6 +28,45 @@ export interface Challenge {
   tolerance: number;
 }
 
+/**
+ * Free-form starters for the GitHub Actions engine. Unlike the in-browser
+ * challenge (a function + hidden tests), here the visitor's whole program runs
+ * for real on a GitHub-hosted runner — print anything; exit 0 passes the gate.
+ */
+export const ACTIONS_STARTERS: Record<ChallengeLang, string> = {
+  javascript: `// Runs for REAL on a GitHub-hosted runner (Node 20), sandboxed:
+// no network · 256 MB · 20s. Print anything. Exit 0 = the gate passes.
+const region = "eu-north-1";
+const storageGb = 120;
+const cost = (storageGb * 0.023).toFixed(2);
+
+console.log(\`deploying to \${region}\`);
+console.log(\`S3 storage estimate: $\${cost}/mo for \${storageGb} GB\`);
+
+if (Number(cost) > 50) {
+  console.error("budget exceeded — failing the build");
+  process.exit(1);
+}
+console.log("\\u2713 within budget — shipping it");
+`,
+  python: `# Runs for REAL on a GitHub-hosted runner (Python 3.12), sandboxed:
+# no network · 256 MB · 20s. Print anything. Exit 0 = the gate passes.
+import sys, platform
+
+print(f"python {platform.python_version()} on the runner")
+
+for replicas in (1, 2, 4, 8, 16):
+    print(f"scale {replicas:>2} replicas -> ~{replicas * 250} rps capacity")
+
+target = 16
+if target > 32:
+    print("over node budget", file=sys.stderr)
+    sys.exit(1)
+
+print("\\u2713 rollout complete")
+`,
+};
+
 export const CHALLENGES: Record<ChallengeLang, Challenge> = {
   javascript: {
     id: "s3-cost",

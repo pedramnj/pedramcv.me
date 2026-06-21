@@ -1,7 +1,8 @@
 "use client";
 
-import { Play, RotateCcw, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Play, RotateCcw, Loader2, CheckCircle2, XCircle, Cpu } from "lucide-react";
 import { usePipeline } from "@/lib/store";
+import { GithubIcon } from "@/components/ui/BrandIcons";
 import { cn } from "@/lib/utils";
 
 const statusMeta = {
@@ -14,9 +15,11 @@ const statusMeta = {
 export default function RunControls() {
   const status = usePipeline((s) => s.status);
   const lang = usePipeline((s) => s.lang);
+  const engine = usePipeline((s) => s.engine);
   const run = usePipeline((s) => s.run);
   const reset = usePipeline((s) => s.reset);
   const setLang = usePipeline((s) => s.setLang);
+  const setEngine = usePipeline((s) => s.setEngine);
 
   const running = status === "running";
   const meta = statusMeta[status];
@@ -59,6 +62,32 @@ export default function RunControls() {
             {l === "javascript" ? "JS" : "Py"}
           </button>
         ))}
+      </div>
+
+      {/* engine toggle: in-browser sandbox vs. real GitHub Actions */}
+      <div className="inline-flex overflow-hidden rounded-xl border border-line" title="Where the CI gate executes your code">
+        <button
+          onClick={() => setEngine("browser")}
+          disabled={running}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-2.5 font-mono text-xs transition",
+            engine === "browser" ? "bg-cyan/15 text-cyan" : "text-muted hover:text-text",
+            running && "opacity-60",
+          )}
+        >
+          <Cpu className="h-3.5 w-3.5" /> Browser
+        </button>
+        <button
+          onClick={() => setEngine("actions")}
+          disabled={running}
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-2.5 font-mono text-xs transition",
+            engine === "actions" ? "bg-violet/15 text-violet" : "text-muted hover:text-text",
+            running && "opacity-60",
+          )}
+        >
+          <GithubIcon className="h-3.5 w-3.5" /> Actions
+        </button>
       </div>
 
       <div className={cn("ml-auto inline-flex items-center gap-2 font-mono text-xs", meta.className)}>

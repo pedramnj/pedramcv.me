@@ -11,13 +11,16 @@
  */
 import { create } from "zustand";
 import { STATIONS, type StationId, type Channel } from "./pipeline/stations";
-import { CHALLENGES, type ChallengeLang } from "./pipeline/challenges";
+import { CHALLENGES, ACTIONS_STARTERS, type ChallengeLang } from "./pipeline/challenges";
 import { runChallenge, type RunResult } from "./pipeline/run-code";
+import { runOnActions } from "./pipeline/actions-client";
 import { sleep } from "./utils";
 
 export type RunStatus = "idle" | "running" | "passed" | "failed";
 export type StationStatus = "idle" | "active" | "success" | "failed" | "skipped";
 export type LogKind = "cmd" | "info" | "pass" | "fail" | "meta";
+/** Where the CI gate actually runs: in-browser sandbox, or real GitHub Actions. */
+export type Engine = "browser" | "actions";
 
 export interface LogLine {
   id: number;
@@ -45,17 +48,24 @@ interface PipelineState {
   failed: boolean;
   logs: LogLine[];
   lastRun: RunResult | null;
+  /** Link to the live GitHub Actions run, when the actions engine is in use. */
+  runUrl: string | null;
 
   // interactive knobs
+  engine: Engine;
   lang: ChallengeLang;
   code: Record<ChallengeLang, string>;
+  /** Free-form code for the GitHub Actions engine (separate from the challenge). */
+  actionsCode: Record<ChallengeLang, string>;
   replicas: number;
   load: number;
 
   // actions
   select: (id: StationId) => void;
+  setEngine: (engine: Engine) => void;
   setLang: (lang: ChallengeLang) => void;
   setCode: (lang: ChallengeLang, code: string) => void;
+  setActionsCode: (lang: ChallengeLang, code: string) => void;
   resetCode: () => void;
   setReplicas: (n: number) => void;
   setLoad: (n: number) => void;
@@ -76,21 +86,33 @@ export const usePipeline = create<PipelineState>((set, get) => ({
   failed: false,
   logs: [],
   lastRun: null,
+  runUrl: null,
 
+  engine: "browser",
   lang: "javascript",
   code: {
     javascript: CHALLENGES.javascript.starter,
     python: CHALLENGES.python.starter,
   },
+  actionsCode: {
+    javascript: ACTIONS_STARTERS.javascript,
+    python: ACTIONS_STARTERS.python,
+  },
   replicas: 3,
   load: 30,
 
   select: (id) => set({ selected: id }),
+  setEngine: (engine) => set({ engine, selected: "ci" }),
   setLang: (lang) => set({ lang, selected: "ci" }),
   setCode: (lang, code) => set((s) => ({ code: { ...s.code, [lang]: code } })),
+  setActionsCode: (lang, code) => set((s) => ({ actionsCode: { ...s.actionsCode, [lang]: code } })),
   resetCode: () => {
-    const { lang } = get();
-    set((s) => ({ code: { ...s.code, [lang]: CHALLENGES[lang].starter } }));
+    const { lang, engine } = get();
+    if (engine === "actions") {
+      set((s) => ({ actionsCode: { ...s.actionsCode, [lang]: ACTIONS_STARTERS[lang] } }));
+    } else {
+      set((s) => ({ code: { ...s.code, [lang]: CHALLENGES[lang].starter } }));
+    }
   },
   setReplicas: (n) => set({ replicas: n }),
   setLoad: (n) => set({ load: n }),
@@ -106,6 +128,7 @@ export const usePipeline = create<PipelineState>((set, get) => ({
       failed: false,
       logs: [],
       lastRun: null,
+      runUrl: null,
     });
   },
 
@@ -124,6 +147,7 @@ export const usePipeline = create<PipelineState>((set, get) => ({
       channel: "cyan",
       logs: [],
       lastRun: null,
+      runUrl: null,
     });
 
     for (const station of STATIONS) {
@@ -145,47 +169,78 @@ export const usePipeline = create<PipelineState>((set, get) => ({
       if (!alive()) return;
 
       if (station.real) {
-        // ---- the genuine gate: run the visitor's code for real ----
-        const { lang, code } = get();
-        const challenge = CHALLENGES[lang];
-        pushLog(station.id, "cmd", lang === "python" ? "$ pytest -q" : "$ npm test");
-        pushLog(station.id, "info", `running ${challenge.tests.length} tests · ${challenge.title}…`);
-
-        const result = await runChallenge(challenge, code[lang]);
-        if (!alive()) return;
-        set({ lastRun: result });
-
-        if (result.error) {
-          pushLog(station.id, "fail", `✖ ${result.error}`);
-        }
-        for (const c of result.cases) {
-          pushLog(
-            station.id,
-            c.passed ? "pass" : "fail",
-            `${c.passed ? "✓ PASS" : "✖ FAIL"}  ${c.desc}` +
-              (c.passed ? "" : `  (expected ${c.expected}, got ${c.got})`),
-          );
-        }
-
-        if (!result.ok) {
-          pushLog(station.id, "fail", `CI failed in ${Math.round(result.durationMs)}ms — pipeline halted.`);
+        const { engine } = get();
+        const halt = () =>
           set((s) => ({
-            status: "failed",
+            status: "failed" as RunStatus,
             failed: true,
             activeStation: null,
             frontTarget: station.index, // hold the (now red) liquid at the failed gate
             stationStatus: {
               ...s.stationStatus,
-              [station.id]: "failed",
+              [station.id]: "failed" as StationStatus,
               ...Object.fromEntries(
                 STATIONS.filter((x) => x.index > station.index).map((x) => [x.id, "skipped"]),
               ),
             },
           }));
-          return;
-        }
 
-        pushLog(station.id, "pass", `✓ all tests green in ${Math.round(result.durationMs)}ms`);
+        if (engine === "actions") {
+          // ---- the real thing: run the visitor's code on GitHub Actions ----
+          const { lang, actionsCode } = get();
+          pushLog(station.id, "cmd", `$ gh workflow run playground.yml -f lang=${lang}`);
+
+          const outcome = await runOnActions(lang, actionsCode[lang], {
+            onLog: (kind, text) => pushLog(station.id, kind, text),
+            onRunUrl: (url) => set({ runUrl: url }),
+            alive,
+          });
+          if (!alive()) return;
+
+          for (const line of outcome.output.split("\n").slice(0, 60)) {
+            if (line.trim()) pushLog(station.id, "info", line);
+          }
+
+          if (!outcome.ok) {
+            pushLog(station.id, "fail",
+              outcome.error
+                ? `✖ ${outcome.error}`
+                : `✖ process exited ${outcome.exitCode} on GitHub Actions — pipeline halted.`);
+            halt();
+            return;
+          }
+          pushLog(station.id, "pass", "✓ exit 0 on a real GitHub-hosted runner");
+        } else {
+          // ---- in-browser sandbox: run the visitor's code against hidden tests ----
+          const { lang, code } = get();
+          const challenge = CHALLENGES[lang];
+          pushLog(station.id, "cmd", lang === "python" ? "$ pytest -q" : "$ npm test");
+          pushLog(station.id, "info", `running ${challenge.tests.length} tests · ${challenge.title}…`);
+
+          const result = await runChallenge(challenge, code[lang]);
+          if (!alive()) return;
+          set({ lastRun: result });
+
+          if (result.error) {
+            pushLog(station.id, "fail", `✖ ${result.error}`);
+          }
+          for (const c of result.cases) {
+            pushLog(
+              station.id,
+              c.passed ? "pass" : "fail",
+              `${c.passed ? "✓ PASS" : "✖ FAIL"}  ${c.desc}` +
+                (c.passed ? "" : `  (expected ${c.expected}, got ${c.got})`),
+            );
+          }
+
+          if (!result.ok) {
+            pushLog(station.id, "fail", `CI failed in ${Math.round(result.durationMs)}ms — pipeline halted.`);
+            halt();
+            return;
+          }
+
+          pushLog(station.id, "pass", `✓ all tests green in ${Math.round(result.durationMs)}ms`);
+        }
       } else if (station.steps) {
         // ---- realistic scripted stream ----
         for (const step of station.steps) {
