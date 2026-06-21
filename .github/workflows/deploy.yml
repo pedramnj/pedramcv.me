@@ -41,7 +41,10 @@ jobs:
           ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Rsync static export → server
+        # The deploy key is locked to `rrsync -wo /var/www/pedramcv` on the box, so
+        # it can ONLY rsync into the web root. Skip -p/-o/-g: the deploy user can't
+        # chown, and its umask already yields nginx-readable 644/755.
         run: |
-          rsync -avz --delete \
+          rsync -rltvz --delete \
             -e "ssh -i ~/.ssh/id_ed25519" \
             out/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}/"
