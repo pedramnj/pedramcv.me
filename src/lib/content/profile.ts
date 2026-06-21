@@ -9,10 +9,8 @@ export const profile = {
   title: "Cloud & DevOps Engineer",
   tagline: "I build cloud-native systems — and this site lets you run one.",
   location: "Torino, Italy",
-  citizenship: "EU citizen",
   email: "p_nikjooy@yahoo.com",
-  phone: "+39 331 272 4715",
-  cert: "AWS Certified Cloud Practitioner — CLF-C02",
+  cert: "AWS Cloud Practitioner Essentials (Classroom)",
   links: {
     github: "https://github.com/pedramnj",
     linkedin: "https://www.linkedin.com/in/pedram-nikjooy",
@@ -60,14 +58,6 @@ export const projects: Project[] = [
       "An AI platform that turns instrumented buildings into autonomous structural inspectors — classifying each as Safe / Restricted / Unsafe within minutes of a seismic event. I architect and operate the full cloud-native stack and a production ML pipeline reaching 0.97 macro-F1.",
     stack: ["FastAPI", "PostgreSQL / TimescaleDB", "Celery / Redis", "S3", "Docker", "CI/CD"],
   },
-  {
-    name: "PeDax",
-    role: "Independent Project",
-    period: "2026 – Present",
-    blurb:
-      "A production-hardened, multi-symbol ML trading platform: real-time market-data ingest, walk-forward ML with calibrated probabilities, a per-asset risk engine, and paper/live execution with shadow validation — deployed on Hetzner with full observability.",
-    stack: ["Python / FastAPI", "Next.js 15", "PostgreSQL", "Docker Compose", "GitHub Actions", "Prometheus / Grafana", "MLflow"],
-  },
 ];
 
 export const education = [
@@ -98,7 +88,7 @@ export const experience = [
 ];
 
 export const certifications = [
-  { name: "AWS Certified Cloud Practitioner (CLF-C02)", issuer: "Amazon Web Services", year: "2026" },
+  { name: "AWS Cloud Practitioner Essentials (Classroom)", issuer: "Amazon Web Services", year: "2026" },
   { name: "Meta Front-End Developer", issuer: "Meta", year: "2024" },
   { name: "Technical Support Fundamentals", issuer: "Google", year: "2024" },
 ];

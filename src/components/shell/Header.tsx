@@ -7,10 +7,6 @@ export default function Header() {
     <header className="fixed inset-x-0 top-0 z-50">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6">
         <div className="glass flex items-center gap-3 rounded-full px-4 py-2">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan opacity-60" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan" />
-          </span>
           <span className="font-display text-sm font-semibold tracking-tight">{profile.name}</span>
           <span className="hidden font-mono text-[10px] uppercase tracking-widest text-muted sm:inline">
             / {profile.title}

@@ -1,4 +1,4 @@
-import { Globe, Mail, Phone, MapPin, Download, GraduationCap, Award } from "lucide-react";
+import { Globe, Mail, MapPin, Download, GraduationCap, Award } from "lucide-react";
 import { GithubIcon, LinkedinIcon } from "@/components/ui/BrandIcons";
 import { profile, skills, projects, certifications, languages } from "@/lib/content/profile";
 import { Tag } from "@/components/ui/primitives";
@@ -15,9 +15,8 @@ export default function Footer() {
           <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted">{profile.summary}</p>
 
           <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
-            <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-faint" /> {profile.location} · {profile.citizenship}</span>
+            <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-faint" /> {profile.location}</span>
             <a href={`mailto:${profile.email}`} className="inline-flex items-center gap-1.5 transition hover:text-cyan"><Mail className="h-4 w-4 text-faint" /> {profile.email}</a>
-            <a href={`tel:${profile.phone.replace(/\s/g, "")}`} className="inline-flex items-center gap-1.5 transition hover:text-cyan"><Phone className="h-4 w-4 text-faint" /> {profile.phone}</a>
           </div>
 
           <div className="mt-6 flex flex-wrap gap-2">
@@ -92,7 +91,7 @@ export default function Footer() {
 
       <div className="mt-10 flex flex-col items-center justify-between gap-2 border-t border-line/60 pt-6 text-center font-mono text-[11px] text-faint sm:flex-row sm:text-left">
         <span>© {new Date().getFullYear()} {profile.name} — built with Next.js, React Three Fiber & real CI.</span>
-        <span>Static export · self-hosted on Hetzner · <span className="text-cyan">pedramcv.me</span></span>
+        <span className="text-cyan">pedramcv.me</span>
       </div>
     </footer>
   );
