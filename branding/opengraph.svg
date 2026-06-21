@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" font-family="'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a1124"/>
+      <stop offset="0.55" stop-color="#060a16"/>
+      <stop offset="1" stop-color="#04060d"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="0.5" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#a855f7"/>
+    </linearGradient>
+    <linearGradient id="liquid" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="0.5" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#a855f7"/>
+    </linearGradient>
+    <radialGradient id="glowTR" cx="82%" cy="18%" r="60%">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowBL" cx="10%" cy="92%" r="55%">
+      <stop offset="0" stop-color="#a855f7" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#a855f7" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="dots" width="30" height="30" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.3" fill="#21405c" fill-opacity="0.45"/>
+    </pattern>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="7" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowS" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#dots)"/>
+  <rect width="1200" height="630" fill="url(#glowTR)"/>
+  <rect width="1200" height="630" fill="url(#glowBL)"/>
+
+  <!-- faint serpentine in the background for texture -->
+  <path d="M -40 250 C 180 250 220 110 420 110 S 700 250 900 150 1240 150 1240 150"
+        fill="none" stroke="#1b3550" stroke-opacity="0.5" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- hero pipe (right side): glass tube + glowing liquid + nodes -->
+  <g>
+    <path d="M 812 566 L 1150 120" fill="none" stroke="#cfe9ff" stroke-opacity="0.10" stroke-width="34" stroke-linecap="round"/>
+    <path d="M 812 566 L 1150 120" fill="none" stroke="url(#liquid)" stroke-width="18" stroke-linecap="round" filter="url(#glow)"/>
+    <!-- a short branch to read as a pipeline junction -->
+    <path d="M 980 343 L 1110 360" fill="none" stroke="#cfe9ff" stroke-opacity="0.10" stroke-width="22" stroke-linecap="round"/>
+    <path d="M 980 343 L 1092 358" fill="none" stroke="#22d3ee" stroke-width="11" stroke-linecap="round" filter="url(#glowS)"/>
+    <!-- glowing station nodes -->
+    <circle cx="1150" cy="120" r="15" fill="#eafdff" filter="url(#glow)"/>
+    <circle cx="980" cy="343" r="11" fill="#a855f7" filter="url(#glowS)"/>
+    <circle cx="1092" cy="358" r="8" fill="#34d399" filter="url(#glowS)"/>
+    <circle cx="812" cy="566" r="11" fill="#fbbf24" filter="url(#glowS)"/>
+  </g>
+
+  <!-- eyebrow -->
+  <text x="72" y="132" fill="#22d3ee" font-size="22" font-weight="700" letter-spacing="5">
+    <tspan fill="#22d3ee" opacity="0.6">— </tspan>LIVE PIPELINE PLAYGROUND
+  </text>
+
+  <!-- headline -->
+  <text x="70" y="236" font-size="66" font-weight="800" letter-spacing="-1" fill="#f4f7ff">Edit the code.</text>
+  <text x="70" y="316" font-size="66" font-weight="800" letter-spacing="-1" fill="url(#accent)">Run the pipeline.</text>
+  <text x="70" y="396" font-size="66" font-weight="800" letter-spacing="-1" fill="#f4f7ff">Watch it flow.</text>
+
+  <!-- tagline -->
+  <text x="72" y="456" font-size="25" fill="#93a3b8">An interactive cloud-native pipeline you can actually run —</text>
+  <text x="72" y="490" font-size="25" font-weight="600" fill="#b7c2d2">real CI&#160;&#160;·&#160;&#160;real GitHub Actions&#160;&#160;·&#160;&#160;real Grafana.</text>
+
+  <!-- identity + URL -->
+  <text x="74" y="556" font-size="22" fill="#8b9bb0"><tspan fill="#dbe4f0" font-weight="700">Pedram Nikjooy</tspan>  ·  Cloud &amp; DevOps Engineer</text>
+  <g>
+    <rect x="72" y="572" width="244" height="44" rx="22" fill="#22d3ee" fill-opacity="0.10" stroke="#22d3ee" stroke-opacity="0.55" stroke-width="1.5"/>
+    <text x="194" y="600" text-anchor="middle" font-size="24" font-weight="700" fill="#22d3ee" font-family="ui-monospace, 'SF Mono', Menlo, monospace">▶  pedramcv.me</text>
+  </g>
+
+  <!-- subtle inner border -->
+  <rect x="3" y="3" width="1194" height="624" rx="2" fill="none" stroke="#1b2542" stroke-width="2"/>
+</svg>
