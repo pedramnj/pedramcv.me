@@ -4,9 +4,9 @@ import { useState } from "react";
 import { Check, Copy, Monitor, ArrowRight } from "lucide-react";
 
 /**
- * Phones get a playful "come back on desktop" screen instead of the full
- * playground. Pure-CSS visibility (`md:hidden`) means desktop never even paints
- * it; the dismiss link lets the stubborn squeeze in anyway.
+ * Phones and tablets (< lg / 1024px) get a playful "come back on desktop"
+ * screen instead of the full playground. Pure-CSS visibility (`lg:hidden`) means
+ * desktop never even paints it; the dismiss link lets the stubborn squeeze in.
  */
 export default function MobileGate() {
   const [dismissed, setDismissed] = useState(false);
@@ -24,7 +24,7 @@ export default function MobileGate() {
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-y-auto bg-void px-6 py-10 text-center md:hidden">
+    <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center overflow-y-auto bg-void px-6 py-10 text-center lg:hidden">
       {/* ambient glow */}
       <div className="pointer-events-none absolute inset-0 [background:radial-gradient(circle_at_50%_18%,color-mix(in_oklab,var(--cyan)_14%,transparent),transparent_55%)]" />
 
@@ -40,7 +40,7 @@ export default function MobileGate() {
           <span className="bg-gradient-to-r from-cyan via-cyan-soft to-violet bg-clip-text text-transparent">
             CI/CD pipeline
           </span>{" "}
-          would fit on your phone… did you? 😏
+          would fit on a screen this small… did you? 😏
         </h1>
 
         <p className="mt-4 text-[15px] leading-relaxed text-muted">
