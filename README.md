@@ -46,8 +46,7 @@ Yes — where it counts. The CI gate runs the visitor's own code for real:
 - Break a test → red liquid, the pipeline **halts** at CI. Fix it → green, it flows on.
 
 No server is required: it's a fully **static export**, so anonymous visitors can run code with
-zero backend and zero security risk. The other stations stream realistic logs today, with **real
-GitHub Actions runs** wired in next (see [Roadmap](#roadmap)).
+zero backend and zero security risk.
 
 ## Tech
 
@@ -55,7 +54,7 @@ GitHub Actions runs** wired in next (see [Roadmap](#roadmap)).
 - **React Three Fiber** + **drei** + **postprocessing** (Bloom) with a custom **GLSL flow shader**
 - **Tailwind CSS v4** · **zustand** (pipeline orchestrator) · **CodeMirror 6** (editor)
 - **Pyodide** (real Python) · sandboxed **Web Worker** (real JS)
-- Ships as a **static site** served by **nginx**; deployed to Hetzner. The box never builds — it
+- Ships as a **static site** served by **nginx**. The box never builds — it
   only serves files. CI builds off-box.
 
 ## Run it locally
@@ -87,13 +86,6 @@ docker/ · infra/terraform/ · k8s/ · monitoring/   # real, valid config (shown
 .github/workflows/         # the site's own CI/CD
 deploy/ · scripts/         # nginx vhost + deploy script
 ```
-
-## Roadmap
-
-- **Phase 1 — ✅ shipped:** 3D liquid pipeline + real in-browser execution, live on `pedramcv.me`.
-- **Phase 2:** real **GitHub Actions** runs triggered from the site (Cloudflare Worker proxy + a
-  sandbox repo), streamed live into the animation.
-- **Phase 3:** real **Prometheus/Grafana** metrics embedded in the Observe station.
 
 ## License
 
