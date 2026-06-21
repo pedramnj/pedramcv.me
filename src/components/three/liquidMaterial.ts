@@ -59,15 +59,20 @@ const fragment = /* glsl */ `
     // Bright meniscus at the moving fill front.
     float front = smoothstep(0.025, 0.0, abs(along - uFront)) * step(0.001, uFront);
 
+    // Faint always-on shimmer travelling along the empty glass, so the pipe
+    // reads as a live conduit even before a run (and proves the WebGL is alive).
+    float idle = pow(0.5 + 0.5 * sin(along * 36.0 - uTime * 2.2), 3.0);
+
     vec3 glass  = uColor * 0.05 + vec3(0.015, 0.02, 0.03);
     vec3 liquid = uColor * (0.45 + 0.95 * bands) + uColorB * (front * 1.8 + 0.15);
 
     vec3 col = mix(glass, liquid, filled);
+    col += (1.0 - filled) * uColor * idle * 0.10;
     col += fres * mix(vec3(0.10), uColor, filled) * 1.1;
     col += front * uColorB * 1.4;
     col *= uGlow;
 
-    float alpha = mix(0.22, 0.96, filled) + fres * 0.28 + front * 0.4;
+    float alpha = mix(0.22, 0.96, filled) + fres * 0.28 + front * 0.4 + (1.0 - filled) * idle * 0.12;
     gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));
   }
 `;

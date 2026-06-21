@@ -129,10 +129,14 @@ export const usePipeline = create<PipelineState>((set, get) => ({
     for (const station of STATIONS) {
       if (!alive()) return;
 
+      // Send the liquid flowing toward this station the moment it goes active,
+      // so it arrives at the gate while the work runs (and is already there to
+      // turn red if the gate fails) — not only after the station succeeds.
       set((s) => ({
         activeStation: station.id,
         selected: station.id,
         channel: station.channel,
+        frontTarget: station.index,
         stationStatus: { ...s.stationStatus, [station.id]: "active" },
       }));
 
@@ -169,6 +173,7 @@ export const usePipeline = create<PipelineState>((set, get) => ({
             status: "failed",
             failed: true,
             activeStation: null,
+            frontTarget: station.index, // hold the (now red) liquid at the failed gate
             stationStatus: {
               ...s.stationStatus,
               [station.id]: "failed",
