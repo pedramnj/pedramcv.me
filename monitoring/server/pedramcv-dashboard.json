@@ -4,92 +4,300 @@
   "tags": ["pedramcv"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "10s",
-  "time": { "from": "now-30m", "to": "now" },
+  "time": { "from": "now-3h", "to": "now" },
   "templating": { "list": [] },
   "annotations": { "list": [] },
   "panels": [
+    {
+      "id": 100,
+      "type": "row",
+      "title": "At a glance",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "id": 10,
+      "type": "gauge",
+      "title": "CPU now",
+      "description": "Host CPU utilization, 1-minute average.",
+      "datasource": { "type": "prometheus", "uid": "pedramcv-prom" },
+      "gridPos": { "h": 6, "w": 4, "x": 0, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent", "min": 0, "max": 100, "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": 0 },
+            { "color": "orange", "value": 60 },
+            { "color": "red", "value": 85 }
+          ] }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto", "showThresholdLabels": false, "showThresholdMarkers": true
+      },
+      "targets": [
+        { "refId": "A", "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[1m])) * 100)" }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "gauge",
+      "title": "Memory now",
+      "description": "Used memory as a share of total.",
+      "datasource": { "type": "prometheus", "uid": "pedramcv-prom" },
+      "gridPos": { "h": 6, "w": 4, "x": 4, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent", "min": 0, "max": 100, "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": 0 },
+            { "color": "orange", "value": 70 },
+            { "color": "red", "value": 90 }
+          ] }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto", "showThresholdLabels": false, "showThresholdMarkers": true
+      },
+      "targets": [
+        { "refId": "A", "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)" }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "Load (1m)",
+      "description": "1-minute load average.",
+      "datasource": { "type": "prometheus", "uid": "pedramcv-prom" },
+      "gridPos": { "h": 6, "w": 4, "x": 8, "y": 1 },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "decimals": 2, "color": { "mode": "fixed", "fixedColor": "yellow" } },
+        "overrides": []
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "node_load1" } ]
+    },
+    {
+      "id": 13,
+      "type": "stat",
+      "title": "Uptime",
+      "description": "Time since the host last booted.",
+      "datasource": { "type": "prometheus", "uid": "pedramcv-prom" },
+      "gridPos": { "h": 6, "w": 4, "x": 12, "y": 1 },
+      "fieldConfig": {
+        "defaults": { "unit": "s", "color": { "mode": "fixed", "fixedColor": "green" } },
+        "overrides": []
+      },
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "node_time_seconds - node_boot_time_seconds" } ]
+    },
+    {
+      "id": 14,
+      "type": "stat",
+      "title": "Runs (total)",
+      "description": "Every pipeline run dispatched to GitHub Actions.",
+      "datasource": { "type": "prometheus", "uid": "pedramcv-prom" },
+      "gridPos": { "h": 6, "w": 4, "x": 16, "y": 1 },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "blue" } },
+        "overrides": []
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "playground_runs_total" } ]
+    },
+    {
+      "id": 15,
+      "type": "stat",
+      "title": "Success rate",
+      "description": "Share of runs that exited 0.",
+      "datasource": { "type": "prometheus", "uid": "pedramcv-prom" },
+      "gridPos": { "h": 6, "w": 4, "x": 20, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent", "min": 0, "max": 100, "decimals": 0,
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "red", "value": 0 },
+            { "color": "orange", "value": 50 },
+            { "color": "green", "value": 80 }
+          ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "expr": "100 * playground_runs_success_total / clamp_min(playground_runs_total, 1)" } ]
+    },
+
+    {
+      "id": 101,
+      "type": "row",
+      "title": "Host health",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+      "collapsed": false,
+      "panels": []
+    },
     {
       "id": 1,
       "type": "timeseries",
       "title": "CPU utilization",
       "datasource": { "type": "prometheus", "uid": "pedramcv-prom" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "color": { "mode": "fixed", "fixedColor": "green" } }, "overrides": [] },
-      "targets": [
-        { "refId": "A", "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[1m])) * 100)", "legendFormat": "cpu %" }
-      ]
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent", "min": 0, "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": 0 },
+            { "color": "orange", "value": 60 },
+            { "color": "red", "value": 85 }
+          ] },
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 18, "gradientMode": "opacity", "showPoints": "never", "thresholdsStyle": { "mode": "dashed" } }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [ { "refId": "A", "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[1m])) * 100)", "legendFormat": "cpu %" } ]
     },
     {
       "id": 2,
       "type": "timeseries",
       "title": "Memory used",
       "datasource": { "type": "prometheus", "uid": "pedramcv-prom" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "color": { "mode": "fixed", "fixedColor": "purple" } }, "overrides": [] },
-      "targets": [
-        { "refId": "A", "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)", "legendFormat": "mem %" }
-      ]
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent", "min": 0, "max": 100,
+          "color": { "mode": "fixed", "fixedColor": "purple" },
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 18, "gradientMode": "opacity", "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [ { "refId": "A", "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)", "legendFormat": "mem %" } ]
     },
     {
       "id": 3,
       "type": "timeseries",
-      "title": "Load average (1m)",
+      "title": "Load average",
       "datasource": { "type": "prometheus", "uid": "pedramcv-prom" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "yellow" } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short", "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 8, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi", "sort": "none" } },
       "targets": [
-        { "refId": "A", "expr": "node_load1", "legendFormat": "load1" }
+        { "refId": "A", "expr": "node_load1", "legendFormat": "1m" },
+        { "refId": "B", "expr": "node_load5", "legendFormat": "5m" },
+        { "refId": "C", "expr": "node_load15", "legendFormat": "15m" }
       ]
     },
     {
       "id": 4,
-      "type": "stat",
-      "title": "Playground runs (total)",
+      "type": "timeseries",
+      "title": "Root filesystem used",
       "datasource": { "type": "prometheus", "uid": "pedramcv-prom" },
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 8 },
-      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "blue" } }, "overrides": [] },
-      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent", "min": 0, "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [
+            { "color": "green", "value": 0 },
+            { "color": "orange", "value": 75 },
+            { "color": "red", "value": 90 }
+          ] },
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 14, "gradientMode": "opacity", "showPoints": "never", "thresholdsStyle": { "mode": "dashed" } }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] }, "tooltip": { "mode": "single", "sort": "none" } },
       "targets": [
-        { "refId": "A", "expr": "playground_runs_total", "legendFormat": "runs" }
+        { "refId": "A", "expr": "100 * (1 - node_filesystem_avail_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"} / node_filesystem_size_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay|squashfs\"})", "legendFormat": "/ used %" }
       ]
+    },
+
+    {
+      "id": 102,
+      "type": "row",
+      "title": "Playground activity",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 24 },
+      "collapsed": false,
+      "panels": []
     },
     {
       "id": 5,
-      "type": "stat",
-      "title": "Success rate",
+      "type": "timeseries",
+      "title": "Runs over time",
+      "description": "Cumulative pipeline runs, split by outcome.",
       "datasource": { "type": "prometheus", "uid": "pedramcv-prom" },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 8 },
-      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": 0 }, { "color": "green", "value": 80 } ] } }, "overrides": [] },
-      "options": { "colorMode": "background", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 25 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "palette-classic" },
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 12, "showPoints": "never", "stacking": { "mode": "none" } }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "success" }, "properties": [ { "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } } ] },
+          { "matcher": { "id": "byName", "options": "failure" }, "properties": [ { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } } ] },
+          { "matcher": { "id": "byName", "options": "total" }, "properties": [ { "id": "color", "value": { "mode": "fixed", "fixedColor": "blue" } } ] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "calcs": ["lastNotNull"] }, "tooltip": { "mode": "multi", "sort": "none" } },
       "targets": [
-        { "refId": "A", "expr": "100 * playground_runs_success_total / clamp_min(playground_runs_total, 1)", "legendFormat": "success %" }
+        { "refId": "A", "expr": "playground_runs_total", "legendFormat": "total" },
+        { "refId": "B", "expr": "playground_runs_success_total", "legendFormat": "success" },
+        { "refId": "C", "expr": "playground_runs_failure_total", "legendFormat": "failure" }
       ]
     },
     {
       "id": 6,
-      "type": "stat",
+      "type": "timeseries",
       "title": "In-flight runs",
+      "description": "Runs currently executing in the sandbox.",
       "datasource": { "type": "prometheus", "uid": "pedramcv-prom" },
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 12 },
-      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "cyan" } }, "overrides": [] },
-      "options": { "colorMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "targets": [
-        { "refId": "A", "expr": "playground_inflight", "legendFormat": "inflight" }
-      ]
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 25 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short", "min": 0, "decimals": 0,
+          "color": { "mode": "fixed", "fixedColor": "cyan" },
+          "custom": { "drawStyle": "line", "lineInterpolation": "stepAfter", "lineWidth": 2, "fillOpacity": 22, "gradientMode": "opacity", "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [ { "refId": "A", "expr": "playground_inflight", "legendFormat": "inflight" } ]
     },
     {
       "id": 7,
-      "type": "stat",
-      "title": "Dispatch latency (avg ms)",
+      "type": "timeseries",
+      "title": "Dispatch latency",
+      "description": "Time to hand a run off to GitHub Actions.",
       "datasource": { "type": "prometheus", "uid": "pedramcv-prom" },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 12 },
-      "fieldConfig": { "defaults": { "unit": "ms", "color": { "mode": "fixed", "fixedColor": "orange" } }, "overrides": [] },
-      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "targets": [
-        { "refId": "A", "expr": "playground_dispatch_latency_ms", "legendFormat": "dispatch ms" }
-      ]
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 25 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms", "min": 0,
+          "color": { "mode": "fixed", "fixedColor": "orange" },
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 18, "gradientMode": "opacity", "showPoints": "auto" }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [ { "refId": "A", "expr": "playground_dispatch_latency_ms", "legendFormat": "dispatch ms" } ]
     }
   ]
 }
