@@ -1,0 +1,17 @@
+groups:
+  - name: golden-signals
+    rules:
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
+        for: 2m
+        labels: { severity: warning }
+        annotations:
+          summary: "p95 latency above SLO — autoscaler should react"
+          description: "p95 request latency has exceeded 500ms for 2 minutes."
+
+      - alert: TargetDown
+        expr: up{job="pedramcv"} == 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "Scrape target is down"

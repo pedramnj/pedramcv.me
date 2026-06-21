@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pedramcv
+  labels: { app: pedramcv }
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxSurge: 1, maxUnavailable: 0 } # zero-downtime
+  selector:
+    matchLabels: { app: pedramcv }
+  template:
+    metadata:
+      labels: { app: pedramcv }
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/pedramnj/pedramcv:latest
+          ports: [{ containerPort: 80 }]
+          resources:
+            requests: { cpu: "25m", memory: "32Mi" }
+            limits: { cpu: "100m", memory: "64Mi" }
+          readinessProbe:
+            httpGet: { path: /, port: 80 }
+          livenessProbe:
+            httpGet: { path: /, port: 80 }
+            initialDelaySeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pedramcv
+spec:
+  selector: { app: pedramcv }
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: pedramcv }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: pedramcv }
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 70 }

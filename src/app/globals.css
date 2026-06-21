@@ -1,26 +1,207 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------ *
+ *  PIPELINE — design tokens
+ *  Dark "control-room" aesthetic: deep void, neon liquid, glass panels.
+ *  Liquid colors double as semantic channels:
+ *    cyan = data/flow · emerald = success/security · amber = cost/warn
+ *    magenta = compute/accent · red = failure
+ * ------------------------------------------------------------------ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --void: #04060d;
+  --void-2: #070b16;
+  --surface: #0b1120;
+  --line: #1b2740;
+
+  --text: #e7eef9;
+  --muted: #8a98b4;
+  --faint: #5b6781;
+
+  --cyan: #22d3ee;
+  --cyan-soft: #67e8f9;
+  --emerald: #34d399;
+  --amber: #fbbf24;
+  --magenta: #d36bff;
+  --violet: #8b7bff;
+  --red: #fb6f70;
+
+  --glass: color-mix(in oklab, var(--surface) 62%, transparent);
+  --glass-line: color-mix(in oklab, #ffffff 9%, transparent);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-void: var(--void);
+  --color-void-2: var(--void-2);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+
+  --color-cyan: var(--cyan);
+  --color-cyan-soft: var(--cyan-soft);
+  --color-emerald: var(--emerald);
+  --color-amber: var(--amber);
+  --color-magenta: var(--magenta);
+  --color-violet: var(--violet);
+  --color-red: var(--red);
+
+  --color-background: var(--void);
+  --color-foreground: var(--text);
+
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, "SF Mono", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--line);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  /* Subtle dot grid + radial vignette — the "control room" floor. */
+  background-image:
+    radial-gradient(circle at 50% -10%, color-mix(in oklab, var(--cyan) 10%, transparent), transparent 45%),
+    radial-gradient(circle at 90% 100%, color-mix(in oklab, var(--magenta) 9%, transparent), transparent 50%),
+    radial-gradient(color-mix(in oklab, #ffffff 4%, transparent) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 26px 26px;
+  background-attachment: fixed;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--cyan) 35%, transparent);
+  color: #fff;
+}
+
+/* ----------------------------- utilities ----------------------------- */
+@layer utilities {
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid var(--glass-line);
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, #fff 8%, transparent),
+      0 18px 50px -22px rgba(0, 0, 0, 0.85);
+  }
+
+  .glass-strong {
+    background: color-mix(in oklab, var(--surface) 82%, transparent);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid var(--glass-line);
+  }
+
+  .hairline {
+    border: 1px solid color-mix(in oklab, #fff 8%, transparent);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 22px color-mix(in oklab, currentColor 55%, transparent);
+  }
+
+  .ring-glow {
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, currentColor 40%, transparent),
+      0 0 28px -4px color-mix(in oklab, currentColor 60%, transparent);
+  }
+
+  .mono-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Animated conic gradient border for "live" panels. */
+  .live-border {
+    position: relative;
+  }
+  .live-border::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(
+      from var(--angle, 0deg),
+      transparent 0deg,
+      var(--cyan) 60deg,
+      transparent 140deg,
+      transparent 360deg
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: spin-border 4s linear infinite;
+    opacity: 0.8;
+    pointer-events: none;
+  }
+}
+
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes spin-border {
+  to {
+    --angle: 360deg;
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes flow-dash {
+  to { stroke-dashoffset: -1000; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-rise { animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-pulse-soft { animation: pulse-soft 2.4s ease-in-out infinite; }
+
+/* Custom scrollbar — thin, on-brand. */
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--cyan) 22%, var(--surface));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--cyan) 40%, var(--surface));
+  background-clip: content-box;
+}
+
+/* Respect reduced-motion: kill non-essential animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  body { background-attachment: scroll; }
 }
