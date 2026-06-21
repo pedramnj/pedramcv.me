@@ -75,6 +75,8 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full">
+        {/* Python runs via Pyodide lazy-loaded from jsdelivr — warm the DNS early. */}
+        <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
         {children}
         <MobileGate />
       </body>

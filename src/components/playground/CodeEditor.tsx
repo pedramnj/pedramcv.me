@@ -1,64 +1,26 @@
 "use client";
 
-import { useMemo } from "react";
-import CodeMirror from "@uiw/react-codemirror";
-import { EditorView } from "@codemirror/view";
-import { javascript } from "@codemirror/lang-javascript";
-import { python } from "@codemirror/lang-python";
-import { yaml } from "@codemirror/lang-yaml";
-import { pipelineTheme } from "./cm-theme";
+import dynamic from "next/dynamic";
 
-export type EditorLang =
-  | "javascript"
-  | "python"
-  | "yaml"
-  | "dockerfile"
-  | "hcl"
-  | "ini"
-  | "bash";
+export type { EditorLang } from "./CodeEditorImpl";
 
-function langExtensions(lang: EditorLang) {
-  switch (lang) {
-    case "javascript": return [javascript()];
-    case "python": return [python()];
-    case "yaml": return [yaml()];
-    default: return []; // dockerfile / hcl / ini / bash render as themed plain text
-  }
-}
+/**
+ * CodeMirror (lexers + view) is ~200 KB of JS but the editor lives below the
+ * fold in the console. Split it into its own chunk so it never weighs down the
+ * initial bundle / first paint — it streams in on the client with a skeleton.
+ */
+const CodeEditor = dynamic(() => import("./CodeEditorImpl"), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="flex min-h-[240px] w-full items-center justify-center rounded-lg border border-line/70 bg-white/[0.02]"
+      aria-hidden="true"
+    >
+      <span className="font-mono text-[11px] uppercase tracking-widest text-faint">
+        loading editor…
+      </span>
+    </div>
+  ),
+});
 
-interface Props {
-  value: string;
-  lang: EditorLang;
-  onChange?: (v: string) => void;
-  editable?: boolean;
-  height?: string;
-}
-
-/** Thin CodeMirror wrapper used for both the editable challenge and read-only artifacts. */
-export default function CodeEditor({ value, lang, onChange, editable = true, height = "260px" }: Props) {
-  const extensions = useMemo(
-    () => [...langExtensions(lang), EditorView.lineWrapping],
-    [lang],
-  );
-
-  return (
-    <CodeMirror
-      value={value}
-      height={height}
-      theme={pipelineTheme}
-      extensions={extensions}
-      editable={editable}
-      readOnly={!editable}
-      onChange={onChange}
-      basicSetup={{
-        lineNumbers: true,
-        foldGutter: false,
-        highlightActiveLine: editable,
-        highlightActiveLineGutter: editable,
-        autocompletion: false,
-        searchKeymap: false,
-      }}
-      style={{ fontSize: 13, background: "transparent" }}
-    />
-  );
-}
+export default CodeEditor;
